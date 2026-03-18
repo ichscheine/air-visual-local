@@ -125,6 +125,8 @@ Notes:
 Store privacy disclosures live in:
 
 - [`docs/privacy-policy.md`](/Users/daoming/Documents/Github/air-visual/docs/privacy-policy.md)
+- [`docs/vision-models-report.html`](/Users/daoming/Documents/Github/air-visual/docs/vision-models-report.html)
+- [`docs/vision-models-report.pdf`](/Users/daoming/Documents/Github/air-visual/docs/vision-models-report.pdf)
 
 ## Limitations
 

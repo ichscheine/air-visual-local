@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Air Visual Vision Models, Workflow, and Decisions</title>
+    <style>
+      @page {
+        size: letter;
+        margin: 0.65in;
+      }
+
+      :root {
+        --ink: #14213d;
+        --muted: #475569;
+        --line: #cbd5e1;
+        --soft: #eef4fb;
+        --accent: #0f766e;
+        --accent-soft: #dff7f1;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: white;
+        font: 14px/1.55 "Helvetica Neue", Arial, sans-serif;
+      }
+
+      main {
+        max-width: 8.2in;
+        margin: 0 auto;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.18;
+      }
+
+      h1 {
+        font-size: 28px;
+        letter-spacing: -0.02em;
+      }
+
+      h2 {
+        margin-top: 28px;
+        margin-bottom: 10px;
+        padding-top: 6px;
+        border-top: 2px solid var(--ink);
+        font-size: 18px;
+      }
+
+      h3 {
+        margin-top: 18px;
+        margin-bottom: 8px;
+        font-size: 15px;
+      }
+
+      p {
+        margin: 8px 0;
+      }
+
+      ul,
+      ol {
+        margin: 8px 0 8px 18px;
+        padding: 0;
+      }
+
+      li {
+        margin: 5px 0;
+      }
+
+      .hero {
+        margin-bottom: 24px;
+        padding: 22px 24px;
+        border: 1px solid var(--line);
+        background:
+          linear-gradient(135deg, rgba(15, 118, 110, 0.06), rgba(20, 33, 61, 0.02)),
+          white;
+      }
+
+      .kicker {
+        margin-bottom: 10px;
+        color: var(--accent);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .meta {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .note,
+      .decision {
+        padding: 12px 14px;
+        border-left: 4px solid var(--accent);
+        background: var(--soft);
+      }
+
+      .decision {
+        margin: 10px 0;
+        background: var(--accent-soft);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 11px;
+        border: 1px solid var(--line);
+        vertical-align: top;
+        text-align: left;
+      }
+
+      th {
+        background: var(--soft);
+        font-size: 12px;
+      }
+
+      code {
+        padding: 1px 4px;
+        border-radius: 4px;
+        background: #f8fafc;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+      }
+
+      .small {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .section-break {
+        page-break-before: always;
+      }
+
+      @media print {
+        .avoid-break {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero avoid-break">
+        <div class="kicker">Air Visual Internal Document</div>
+        <h1>Vision Models, Workflow, and Decisions</h1>
+        <p>
+          This document summarizes the vision understanding models, image-generation model usage,
+          end-to-end workflow, and design decisions reflected in the current Air Visual repository.
+        </p>
+        <p class="meta">
+          Prepared from the codebase state on 2026-03-18.
+          Repo evidence came from <code>README.md</code>, <code>server/server.mjs</code>,
+          <code>content.js</code>, <code>sidepanel.js</code>, and <code>scripts/generate_cws_assets.py</code>.
+        </p>
+      </section>
+
+      <section class="avoid-break">
+        <h2>Evidence Note</h2>
+        <div class="note">
+          The repo does not currently preserve a separate experiment log, benchmark sheet, or decision journal.
+          As a result, this write-up documents the models and decisions that are clearly reflected in current code,
+          README defaults, and supported execution paths. It should be treated as an implementation-grounded summary,
+          not a retrospective lab notebook.
+        </div>
+      </section>
+
+      <section class="avoid-break">
+        <h2>Executive Summary</h2>
+        <ul>
+          <li>Air Visual's core product path is vision understanding, not generative photo editing.</li>
+          <li>The hosted analysis default is <code>gemini-2.5-flash-lite</code>.</li>
+          <li>The local analysis default and main Ollama path is <code>qwen2.5vl:3b</code>.</li>
+          <li><code>moondream</code> is retained as a lighter local fallback for constrained machines.</li>
+          <li>The backend also supports multi-model Ollama consensus when multiple compatible local vision models are installed.</li>
+          <li>Generated image output is used only for Chrome Web Store assets via <code>gemini-2.5-flash-image</code>, not for Airbnb listing photo edits.</li>
+          <li>The product deliberately stays inside a truthful Tier 1 boundary: cover choice, light, crop, composition, amenity visibility, and sequence.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Models Covered</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Area</th>
+              <th>Model</th>
+              <th>Repo Status</th>
+              <th>What It Is Used For</th>
+              <th>Decision Summary</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Vision understanding</td>
+              <td><code>gemini-2.5-flash-lite</code></td>
+              <td>Hosted default in README and backend</td>
+              <td>Analyze listing photos and return structured recommendation JSON through the Gemini Developer API.</td>
+              <td>Kept as the low-cost hosted path for fast setup, predictable JSON output, and no local model install requirement.</td>
+            </tr>
+            <tr>
+              <td>Vision understanding</td>
+              <td><code>qwen2.5vl:3b</code></td>
+              <td>Default Ollama model and fallback path</td>
+              <td>Primary local image-analysis model for hosts who want an on-device path.</td>
+              <td>Kept as the practical local default because it balances quality and local usability better than heavier models for this MVP.</td>
+            </tr>
+            <tr>
+              <td>Vision understanding</td>
+              <td><code>moondream</code></td>
+              <td>Supported lighter fallback</td>
+              <td>Constrained-machine fallback when a smaller local model is needed.</td>
+              <td>Retained for speed and lower hardware pressure, but the code narrows it to a smaller first pass because quality is treated as lower-confidence.</td>
+            </tr>
+            <tr>
+              <td>Vision understanding</td>
+              <td><code>qwen2.5vl:7b</code> and other Ollama vision models matched by <code>isVisionModel()</code></td>
+              <td>Supported, not default</td>
+              <td>Optional multi-model consensus runs when multiple installed local vision models are configured.</td>
+              <td>Supported as an extensibility path, but not promoted as the default because the MVP is optimizing for operational simplicity.</td>
+            </tr>
+            <tr>
+              <td>Image generation</td>
+              <td><code>gemini-2.5-flash-image</code></td>
+              <td>Default in the asset-generation script</td>
+              <td>Generate Chrome Web Store icon, promo art, and screenshot-style marketing assets from a reference image.</td>
+              <td>Used only for store and marketing assets. Explicitly not part of the listing-photo recommendation workflow.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="small">
+          Important distinction: the repo does not implement generative editing of Airbnb listing photos.
+          Preview changes inside the product are deterministic CSS-style filter and crop simulations.
+        </p>
+      </section>
+
+      <section class="avoid-break">
+        <h2>Understanding Workflow</h2>
+        <ol>
+          <li>The Chrome extension detects an Airbnb listing or host page and extracts page context from the active tab.</li>
+          <li>The extracted payload includes title, listing URL, visible photo candidates, nightly rate when available, occupancy hints when available, and an amenities preview.</li>
+          <li>The side panel checks backend readiness through <code>/api/status</code> before starting analysis.</li>
+          <li>The backend chooses the active path:
+            Gemini when <code>AI_PROVIDER=gemini</code> or when <code>AI_PROVIDER=auto</code> and <code>GEMINI_API_KEY</code> is present;
+            otherwise Ollama.
+          </li>
+          <li>The backend fetches listing image bytes from the source URLs and converts them to base64 for model input.</li>
+          <li>Gemini receives the prompt plus inline image data and returns schema-constrained JSON.</li>
+          <li>Ollama receives the prompt, attached base64 images, and the same schema target. If multiple configured local vision models are installed, the backend can run them in parallel and merge results by vote threshold.</li>
+          <li>The backend normalizes results, prunes duplicate recommendations, sanitizes edit plans, estimates revenue impact, and ranks recommendations by priority.</li>
+          <li>The side panel renders recommendations, deterministic preview variants, or sequence-move previews.</li>
+          <li>User decisions are stored locally in <code>chrome.storage.local</code> as accept or decline markers tied to listing URL and recommendation ID.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Generation Workflow</h2>
+        <ol>
+          <li>A separate script, <code>scripts/generate_cws_assets.py</code>, handles image generation for Chrome Web Store assets.</li>
+          <li>The script uses a provided reference logo or brand image as conditioning input.</li>
+          <li>It calls Gemini image generation with a branded prompt and asset-specific copy rules.</li>
+          <li>Generated master images are written to <code>tmp/generated-cws-masters/</code>.</li>
+          <li>The script then resizes those masters into the required icon, promo, and screenshot deliverables inside <code>icons/</code> and <code>store-assets/</code>.</li>
+          <li>The README already notes that generated screenshot-style assets are less trustworthy than real captures for final store submission.</li>
+        </ol>
+      </section>
+
+      <section class="section-break">
+        <h2>Decisions Made</h2>
+
+        <div class="decision avoid-break">
+          <h3>1. Keep the product inside a truthful Tier 1 boundary</h3>
+          <p>
+            The system only recommends plausible changes such as cover selection, lighting, crop, composition,
+            amenity visibility, and sequence. It explicitly avoids fabricated amenities, room changes, or fantasy edits.
+          </p>
+        </div>
+
+        <div class="decision avoid-break">
+          <h3>2. Use model output for analysis, not for end-user image rewriting</h3>
+          <p>
+            The recommendation engine can call hosted or local vision models, but user-facing previews are deterministic transforms.
+            This reduces product risk, keeps changes explainable, and stays aligned with the truthful-edit boundary.
+          </p>
+        </div>
+
+        <div class="decision avoid-break">
+          <h3>3. Prefer a simple hosted default and a practical local default</h3>
+          <p>
+            <code>gemini-2.5-flash-lite</code> is the hosted default because it is lightweight and easy to stand up.
+            <code>qwen2.5vl:3b</code> is the local default because it is the main operational compromise between cost, availability, and acceptable vision performance for an MVP.
+          </p>
+        </div>
+
+        <div class="decision avoid-break">
+          <h3>4. Keep a lighter fallback for weaker local hardware</h3>
+          <p>
+            <code>moondream</code> is still supported, but the code intentionally constrains it to a smaller first pass.
+            That is a clear sign the repo treats it as a speed and hardware fallback, not as the preferred quality path.
+          </p>
+        </div>
+
+        <div class="decision avoid-break">
+          <h3>5. Add consensus only where it is operationally justified</h3>
+          <p>
+            Multi-model consensus exists for Ollama, not for Gemini. The backend groups overlapping recommendations,
+            requires a configurable minimum vote count, and keeps only consensus items. This reflects a decision to spend extra local compute only when several local models are available.
+          </p>
+        </div>
+
+        <div class="decision avoid-break">
+          <h3>6. Limit photo count and timeout windows by model path</h3>
+          <p>
+            Photo count and timeout logic are explicitly model-aware. This keeps the extension responsive and recognizes that small local models,
+            larger local models, and hosted Gemini have different latency envelopes.
+          </p>
+        </div>
+
+        <div class="decision avoid-break">
+          <h3>7. Gate hero-image replacement more strictly than simple edits</h3>
+          <p>
+            Cover-photo replacement is only allowed under tighter conditions. When confidence or context is not strong enough,
+            the system downgrades the idea into crop, brightness, or composition guidance instead of forcing a hero swap.
+          </p>
+        </div>
+
+        <div class="decision avoid-break">
+          <h3>8. Keep image generation isolated to brand and store materials</h3>
+          <p>
+            The repo uses Gemini image generation for icons and marketing graphics, but it does not use generated imagery
+            to alter listing photos. That separation is deliberate and consistent with the product's trust model.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Current Recommendation</h2>
+        <ul>
+          <li>Keep <code>gemini-2.5-flash-lite</code> and <code>qwen2.5vl:3b</code> as the main comparison pair for understanding tasks.</li>
+          <li>Treat <code>moondream</code> as a machine-constraint fallback, not a primary quality baseline.</li>
+          <li>Keep <code>gemini-2.5-flash-image</code> scoped to marketing asset generation only.</li>
+          <li>If future testing becomes more formal, add a benchmark set of real listing pages, failure cases, latency numbers, and a decision log to the repo.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Open Gaps</h2>
+        <ul>
+          <li>No benchmark dataset is checked into the repo.</li>
+          <li>No quantitative quality comparison between Gemini and Ollama models is preserved yet.</li>
+          <li>No historical experiment notes explain when or why a specific model was added or removed.</li>
+          <li>No final submission-grade store screenshots are preserved alongside the generated marketing set.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
