@@ -1,0 +1,16 @@
+{
+  "name": "air-visual",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Tier 1 Airbnb host photo optimizer MVP with a Chrome extension and a stateless Ollama proxy.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env server/server.mjs",
+    "check": "node --check server/server.mjs && node --check background.js && node --check content.js && node --check sidepanel.js && node --check scripts/build-cws-package.mjs && python -m py_compile scripts/generate_cws_assets.py",
+    "build:cws": "node scripts/build-cws-package.mjs",
+    "generate:cws-assets": "python scripts/generate_cws_assets.py"
+  }
+}

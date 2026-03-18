@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Air Visual</title>
+    <link rel="stylesheet" href="sidepanel.css">
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <h1>What to fix first</h1>
+      </header>
+
+      <p id="status" class="status hidden" aria-live="polite"></p>
+      <section id="recommendations" class="recommendations"></section>
+    </main>
+
+    <template id="recommendation-template">
+      <article class="card recommendation">
+        <div class="recommendation-header">
+          <div>
+            <p class="category"></p>
+            <h2 class="title"></h2>
+          </div>
+          <div class="score-chip"></div>
+        </div>
+        <div class="top-rationale hidden">
+          <span class="label">Why this is first</span>
+          <p class="top-rationale-text"></p>
+        </div>
+        <div class="impact-block">
+          <p class="impact-line"></p>
+        </div>
+        <p class="analysis-summary hidden"></p>
+        <div class="preview-grid">
+          <figure>
+            <figcaption class="before-caption">Before</figcaption>
+            <img class="current-image" alt="Current listing photo">
+          </figure>
+          <figure>
+            <figcaption class="preview-caption">Preview</figcaption>
+            <div class="variant-frame">
+              <img class="variant-image hidden" alt="AI-optimized variant">
+              <div class="variant-placeholder">Preview not generated</div>
+            </div>
+          </figure>
+        </div>
+        <p class="body-copy issue"></p>
+        <p class="body-copy why"></p>
+        <div class="edit-plan">
+          <span class="label">Edit moves</span>
+          <div class="edit-changes"></div>
+        </div>
+        <div class="button-row">
+          <button class="accept-button success" disabled>Use this change</button>
+          <button class="decline-button danger" disabled>Dismiss</button>
+        </div>
+        <p class="decision-status subtle"></p>
+      </article>
+    </template>
+
+    <template id="empty-state-template">
+      <article class="card recommendation priority-top">
+        <p class="category">No strong quick wins</p>
+        <h2 class="title">No obvious first change right now.</h2>
+        <p class="analysis-summary">Your lead photos already look competitive enough that no single edit clearly stands out.</p>
+      </article>
+    </template>
+
+    <script type="module" src="sidepanel.js"></script>
+  </body>
+</html>
